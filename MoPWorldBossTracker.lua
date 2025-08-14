@@ -14,10 +14,9 @@ local BOSS_QUEST_IDS = {
 }
 
 local function IsQuestCompleted(id)
-    if C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted then
-        return C_QuestLog.IsQuestFlaggedCompleted(id)
-    elseif _G.IsQuestFlaggedCompleted then
-        return _G.IsQuestFlaggedCompleted(id)
+    if GetQuestsCompleted then
+        local completed = GetQuestsCompleted()
+        return completed and completed[id] or false
     end
     return false
 end
