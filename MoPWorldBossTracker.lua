@@ -45,6 +45,12 @@ local function EnsureDefaults()
     DB.framePos = DB.framePos or {}
     DB.lastResetAt = DB.lastResetAt or 0
     DB.showAll = DB.showAll or false
+    DB.tracked = DB.tracked or {}
+    for _, boss in ipairs(BOSSES) do
+        if DB.tracked[boss.id] == nil then
+            DB.tracked[boss.id] = true
+        end
+    end
 end
 
 local function UpdateCharacter()
@@ -58,8 +64,12 @@ local function UpdateCharacter()
     char.lastSeen = time()
     char.killed = char.killed or {}
     for _, boss in ipairs(BOSSES) do
-        if IsQuestCompleted(boss.id) then
-            char.killed[boss.id] = true
+        if DB.tracked[boss.id] then
+            if IsQuestCompleted(boss.id) then
+                char.killed[boss.id] = true
+            else
+                char.killed[boss.id] = nil
+            end
         else
             char.killed[boss.id] = nil
         end
@@ -71,7 +81,7 @@ local function GetMissingBosses(info)
     local killed = type(info.killed) == "table" and info.killed or {}
     local missing = {}
     for _, boss in ipairs(BOSSES) do
-        if not killed[boss.id] then
+        if DB.tracked[boss.id] and not killed[boss.id] then
             table.insert(missing, boss.name)
         end
     end
@@ -189,6 +199,36 @@ local function ToggleMinimapButton()
     UpdateMinimapButton()
 end
 
+local function CreateOptionsPanel()
+    local panel = CreateFrame("Frame")
+    panel.name = "MoP World Boss Tracker"
+
+    local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    title:SetPoint("TOPLEFT", 16, -16)
+    title:SetText("MoP World Boss Tracker")
+
+    local desc = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+    desc:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
+    desc:SetText("Select which bosses to track:")
+
+    local offsetY = -40
+    for _, boss in ipairs(BOSSES) do
+        local check = CreateFrame("CheckButton", nil, panel, "InterfaceOptionsCheckButtonTemplate")
+        check.Text:SetText(boss.name)
+        check:SetPoint("TOPLEFT", 16, offsetY)
+        check:SetScript("OnClick", function(self)
+            DB.tracked[boss.id] = self:GetChecked()
+            RefreshUI()
+        end)
+        check:SetScript("OnShow", function(self)
+            self:SetChecked(DB.tracked[boss.id])
+        end)
+        offsetY = offsetY - 24
+    end
+
+    InterfaceOptions_AddCategory(panel)
+end
+
 local function CreateMinimapButton()
     local button = CreateFrame("Button", "MoPWorldBossTrackerMinimapButton", Minimap)
     button:SetSize(32, 32)
@@ -300,6 +340,7 @@ eventFrame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_LOGIN" then
         EnsureDefaults()
         CreateMainFrame()
+        CreateOptionsPanel()
         CreateMinimapButton()
         CheckReset()
         UpdateCharacter()
