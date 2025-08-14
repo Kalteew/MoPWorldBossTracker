@@ -75,7 +75,7 @@ local function UpdateCharacter()
     char.level = level
     char.class = classFile
     char.lastSeen = time()
-    char.killed = char.killed or {}
+    char.killed = type(char.killed) == "table" and char.killed or {}
     for _, boss in ipairs(BOSSES) do
         if IsQuestCompleted(boss.questId) then
             char.killed[boss.questId] = true
