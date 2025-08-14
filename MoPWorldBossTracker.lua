@@ -454,20 +454,78 @@ end
 local optionsPanel
 
 local function CreateOptionsPanel()
-    optionsPanel = CreateFrame("Frame")
+    optionsPanel = CreateFrame("Frame", "MoPWBOptions")
     optionsPanel.name = "MoP World Boss Tracker"
 
-    local tracking = CreateFrame("Frame")
-    tracking.name = "Bosses"
-    tracking.parent = optionsPanel.name
+    local general = CreateFrame("Frame", nil, optionsPanel)
+    general:SetAllPoints()
 
-    local title = tracking:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    local bosses = CreateFrame("Frame", nil, optionsPanel)
+    bosses:SetAllPoints()
+    bosses:Hide()
+
+    local tab1 = CreateFrame("Button", "$parentTab1", optionsPanel, "PanelTopTabButtonTemplate")
+    tab1:SetText("General")
+    tab1:SetID(1)
+    tab1:SetPoint("BOTTOMLEFT", optionsPanel, "TOPLEFT", 0, 0)
+
+    local tab2 = CreateFrame("Button", "$parentTab2", optionsPanel, "PanelTopTabButtonTemplate")
+    tab2:SetText("Bosses")
+    tab2:SetID(2)
+    tab2:SetPoint("LEFT", tab1, "RIGHT", -15, 0)
+
+    PanelTemplates_SetNumTabs(optionsPanel, 2)
+    local function ShowTab(id)
+        PanelTemplates_SetTab(optionsPanel, id)
+        general:SetShown(id == 1)
+        bosses:SetShown(id == 2)
+    end
+    tab1:SetScript("OnClick", function(self) ShowTab(self:GetID()) end)
+    tab2:SetScript("OnClick", function(self) ShowTab(self:GetID()) end)
+    ShowTab(1)
+
+    local ltitle = general:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    ltitle:SetPoint("TOPLEFT", 16, -16)
+    ltitle:SetText("Logging Level")
+
+    local levels = {
+        { text = "Errors", value = LOG_LEVEL.ERROR },
+        { text = "Info", value = LOG_LEVEL.INFO },
+        { text = "Debug", value = LOG_LEVEL.DEBUG },
+    }
+
+    local dropdown = CreateFrame("Frame", "MoPWBLogLevelDropdown", general, "UIDropDownMenuTemplate")
+    dropdown:SetPoint("TOPLEFT", ltitle, "BOTTOMLEFT", -16, -8)
+
+    UIDropDownMenu_Initialize(dropdown, function(self, level, menuList)
+        local info
+        for _, lvl in ipairs(levels) do
+            info = UIDropDownMenu_CreateInfo()
+            info.text = lvl.text
+            info.value = lvl.value
+            info.func = function(btn)
+                DB.logLevel = btn.value
+                UIDropDownMenu_SetSelectedValue(dropdown, btn.value)
+            end
+            UIDropDownMenu_AddButton(info)
+        end
+    end)
+
+    UIDropDownMenu_SetSelectedValue(dropdown, DB.logLevel)
+    for _, lvl in ipairs(levels) do
+        if lvl.value == DB.logLevel then
+            UIDropDownMenu_SetText(dropdown, lvl.text)
+            break
+        end
+    end
+
+    local title = bosses:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 16, -16)
     title:SetText("Track Bosses")
 
     local last = title
     for _, boss in ipairs(BOSSES) do
-        local cb = CreateFrame("CheckButton", nil, tracking, "InterfaceOptionsCheckButtonTemplate")
+        local cb = CreateFrame("CheckButton", nil, bosses, "InterfaceOptionsCheckButtonTemplate")
         cb.Text = cb.Text or cb:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
         cb.Text:SetPoint("LEFT", cb, "RIGHT", 0, 1)
         cb.Text:SetText(GetBossName(boss))
@@ -481,47 +539,11 @@ local function CreateOptionsPanel()
         last = cb
     end
 
-    local logging = CreateFrame("Frame")
-    logging.name = "Logging"
-    logging.parent = optionsPanel.name
-
-    local ltitle = logging:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-    ltitle:SetPoint("TOPLEFT", 16, -16)
-    ltitle:SetText("Logging Level")
-
-    local levels = {
-        { text = "Errors", value = LOG_LEVEL.ERROR },
-        { text = "Info", value = LOG_LEVEL.INFO },
-        { text = "Debug", value = LOG_LEVEL.DEBUG },
-    }
-    local radios = {}
-    last = ltitle
-    for i, level in ipairs(levels) do
-        local rb = CreateFrame("CheckButton", nil, logging, "UIRadioButtonTemplate")
-        rb.Text = rb.Text or rb:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-        rb.Text:SetPoint("LEFT", rb, "RIGHT", 0, 1)
-        rb.Text:SetText(level.text)
-        rb:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -8)
-        rb:SetChecked(DB.logLevel == level.value)
-        rb:SetScript("OnClick", function(self)
-            DB.logLevel = level.value
-            for _, b in ipairs(radios) do
-                b:SetChecked(b == self)
-            end
-        end)
-        table.insert(radios, rb)
-        last = rb
-    end
-
     if InterfaceOptions_AddCategory then
         InterfaceOptions_AddCategory(optionsPanel)
-        InterfaceOptions_AddCategory(tracking)
-        InterfaceOptions_AddCategory(logging)
     elseif Settings and Settings.RegisterCanvasLayoutCategory then
         local category = Settings.RegisterCanvasLayoutCategory(optionsPanel, optionsPanel.name)
         Settings.RegisterAddOnCategory(category)
-        Settings.RegisterCanvasLayoutSubcategory(category, tracking, tracking.name)
-        Settings.RegisterCanvasLayoutSubcategory(category, logging, logging.name)
     end
 end
 
