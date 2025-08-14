@@ -1,25 +1,72 @@
 # MoP World Boss Tracker
 
-MoPWorldBossTracker is a World of Warcraft addon for Mists of Pandaria Classic that tracks which level 90+ characters on your account still need to kill any MoP world boss for the current weekly reset.
+**MoPWorldBossTracker** is a lightweight World of Warcraft addon for Mists of Pandaria Classic that tracks which of your level 90+ characters still need to defeat MoP world bosses for the current weekly reset.
+
+---
 
 ## Features
-- Minimap button and `/mopwb` slash command to toggle the tracker frame
+
+- Minimap button and `/mopwb` slash commands to toggle the tracker frame
 - Draggable frame with persistent position
 - Lists only characters who have not killed any world boss this week
 - Automatically handles weekly reset boundaries
+- Low memory usage
 
-## Slash Commands
-```
-/mopwb          Toggle the tracker frame
-/mopwb show     Show the tracker frame
-/mopwb hide     Hide the tracker frame
-/mopwb minimap  Toggle the minimap button
-```
+---
 
-## World Boss Quest IDs
+## Usage
+
+Toggle the tracker frame via the minimap button or `/mopwb toggle`. The frame shows your level 90+ characters that still need MoP world boss kills for the week. Use `/mopwb show` or `/mopwb hide` to control visibility and `/mopwb minimap` to toggle the minimap button.
+
+---
+
+## Tracked World Bosses
+
 - Sha of Anger — 32099
 - Galleon — 32098
 - Nalak — 32518
 - Oondasta — 32519
 - Celestials — 33117–33120
 - Ordos — 33121
+
+---
+
+## Supported Languages
+
+MoPWorldBossTracker is available in:
+
+- English (US/GB)
+
+---
+
+## Data Storage
+
+- Uses per-account saved variables (`MoPWorldBossTrackerDB`)
+- Stores tracked character data and frame position
+- Updates automatically during normal gameplay and weekly resets
+
+---
+
+## Limitations
+
+- Only tracks characters on your account
+- Only monitors Mists of Pandaria world bosses
+- Requires characters to be level 90 or higher
+
+---
+
+## Support
+
+Found a bug or have a suggestion?  
+Open an issue here: [GitHub - Kalteew/MoPWorldBossTracker](https://github.com/Kalteew/MoPWorldBossTracker)
+
+---
+
+## License
+
+This addon is open-source under the MIT License.
+
+---
+
+Thank you for using MoPWorldBossTracker!
+
