@@ -207,10 +207,8 @@ local function RefreshUI()
                     if not line then
                         line = AddTextToFrame(mainFrame.content, "", "TOPLEFT", 0, -(index - 1) * 20)
                         mainFrame.lines[index] = line
-                        line:SetPoint("RIGHT")
                     end
                     line:SetText(ColorizeName(name, info.class) .. " - done")
-                    line:Show()
                 else
                     for _, bossName in ipairs(missing) do
                         index = index + 1
@@ -218,10 +216,8 @@ local function RefreshUI()
                         if not line then
                             line = AddTextToFrame(mainFrame.content, "", "TOPLEFT", 0, -(index - 1) * 20)
                             mainFrame.lines[index] = line
-                            line:SetPoint("RIGHT")
                         end
                         line:SetText(ColorizeName(name, info.class) .. " - " .. bossName)
-                        line:Show()
                     end
                 end
             end
