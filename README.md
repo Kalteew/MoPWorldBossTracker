@@ -23,15 +23,15 @@ Toggle the tracker frame via the minimap button or `/mopwb toggle`. The frame sh
 
 ## Tracked World Bosses
 
-- Sha of Anger — 32099
-- Galleon — 32098
-- Nalak — 32518
-- Oondasta — 32519
-- Xuen — 33117
-- Chi-Ji — 33118
-- Yu'lon — 33119
-- Niuzao — 33120
-- Ordos — 33121
+- Sha of Anger — Quest 32099 (NPC 60491)
+- Galleon — Quest 32098 (NPC 62346)
+- Nalak — Quest 32518 (NPC 69099)
+- Oondasta — Quest 32519 (NPC 69161)
+- Xuen — Quest 33117 (NPC 71954)
+- Chi-Ji — Quest 33118 (NPC 71953)
+- Yu'lon — Quest 33119 (NPC 71955)
+- Niuzao — Quest 33120 (NPC 71952)
+- Ordos — Quest 33121 (NPC 72057)
 
 ---
 

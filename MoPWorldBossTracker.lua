@@ -2,16 +2,34 @@
 local ADDON_NAME = ...
 
 local BOSSES = {
-    { id = 32099, name = "Sha of Anger" },
-    { id = 32098, name = "Galleon" },
-    { id = 32518, name = "Nalak" },
-    { id = 32519, name = "Oondasta" },
-    { id = 33117, name = "Xuen" },
-    { id = 33118, name = "Chi-Ji" },
-    { id = 33119, name = "Yu'lon" },
-    { id = 33120, name = "Niuzao" },
-    { id = 33121, name = "Ordos" },
+    { questId = 32099, npcId = 60491 }, -- Sha of Anger
+    { questId = 32098, npcId = 62346 }, -- Galleon
+    { questId = 32518, npcId = 69099 }, -- Nalak
+    { questId = 32519, npcId = 69161 }, -- Oondasta
+    { questId = 33117, npcId = 71954 }, -- Xuen
+    { questId = 33118, npcId = 71953 }, -- Chi-Ji
+    { questId = 33119, npcId = 71955 }, -- Yu'lon
+    { questId = 33120, npcId = 71952 }, -- Niuzao
+    { questId = 33121, npcId = 72057 }, -- Ordos
 }
+
+local function GetBossName(boss)
+    if not boss.name then
+        if EJ_GetCreatureInfoByID then
+            local name = EJ_GetCreatureInfoByID(boss.npcId)
+            if name then
+                boss.name = name
+            end
+        end
+        if not boss.name and C_QuestLog and C_QuestLog.GetTitleForQuestID then
+            boss.name = C_QuestLog.GetTitleForQuestID(boss.questId)
+        end
+        if not boss.name then
+            boss.name = "Unknown"
+        end
+    end
+    return boss.name
+end
 
 local function IsQuestCompleted(id)
     if GetQuestsCompleted then
@@ -59,10 +77,10 @@ local function UpdateCharacter()
     char.lastSeen = time()
     char.killed = char.killed or {}
     for _, boss in ipairs(BOSSES) do
-        if IsQuestCompleted(boss.id) then
-            char.killed[boss.id] = true
+        if IsQuestCompleted(boss.questId) then
+            char.killed[boss.questId] = true
         else
-            char.killed[boss.id] = nil
+            char.killed[boss.questId] = nil
         end
     end
     DB.chars[key] = char
@@ -72,8 +90,8 @@ local function GetMissingBosses(info)
     local killed = type(info.killed) == "table" and info.killed or {}
     local missing = {}
     for _, boss in ipairs(BOSSES) do
-        if not killed[boss.id] then
-            table.insert(missing, boss.name)
+        if not killed[boss.questId] then
+            table.insert(missing, GetBossName(boss))
         end
     end
     return missing
