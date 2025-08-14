@@ -13,6 +13,7 @@
 - Automatically handles weekly reset boundaries
 - Low memory usage
 - `/mopwb version` prints the addon version and currently active bosses
+- Configurable logging with three verbosity levels
 
 ---
 
