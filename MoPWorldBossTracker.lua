@@ -1,31 +1,22 @@
 
 local ADDON_NAME = ...
 
-local BOSS_QUEST_IDS = {
-    32099, -- Sha of Anger
-    32098, -- Galleon
-    32518, -- Nalak
-    32519, -- Oondasta
-    33117, -- Xuen
-    33118, -- Chi-Ji
-    33119, -- Yu'lon
-    33120, -- Niuzao
-    33121, -- Ordos
+local BOSSES = {
+    { id = 32099, name = "Sha of Anger" },
+    { id = 32098, name = "Galleon" },
+    { id = 32518, name = "Nalak" },
+    { id = 32519, name = "Oondasta" },
+    { id = 33117, name = "Xuen" },
+    { id = 33118, name = "Chi-Ji" },
+    { id = 33119, name = "Yu'lon" },
+    { id = 33120, name = "Niuzao" },
+    { id = 33121, name = "Ordos" },
 }
 
 local function IsQuestCompleted(id)
     if GetQuestsCompleted then
         local completed = GetQuestsCompleted()
         return completed and completed[id] or false
-    end
-    return false
-end
-
-local function HasKilledAnyBoss()
-    for _, id in ipairs(BOSS_QUEST_IDS) do
-        if IsQuestCompleted(id) then
-            return true
-        end
     end
     return false
 end
@@ -65,8 +56,26 @@ local function UpdateCharacter()
     char.level = level
     char.class = classFile
     char.lastSeen = time()
-    char.killed = HasKilledAnyBoss()
+    char.killed = char.killed or {}
+    for _, boss in ipairs(BOSSES) do
+        if IsQuestCompleted(boss.id) then
+            char.killed[boss.id] = true
+        else
+            char.killed[boss.id] = nil
+        end
+    end
     DB.chars[key] = char
+end
+
+local function GetMissingBosses(info)
+    local killed = type(info.killed) == "table" and info.killed or {}
+    local missing = {}
+    for _, boss in ipairs(BOSSES) do
+        if not killed[boss.id] then
+            table.insert(missing, boss.name)
+        end
+    end
+    return missing
 end
 
 local function GetNextWeeklyReset()
@@ -83,7 +92,7 @@ local function CheckReset()
     if not DB.lastResetAt or now >= DB.lastResetAt then
         DB.lastResetAt = GetNextWeeklyReset()
         for _, char in pairs(DB.chars) do
-            char.killed = nil
+            char.killed = {}
         end
         return true
     end
@@ -103,21 +112,35 @@ local function RefreshUI()
 
     local index = 0
     for name, info in pairs(DB.chars) do
-        if info.level and info.level >= 90 and (DB.showAll or not info.killed) then
-            index = index + 1
-            local line = mainFrame.lines[index]
-            if not line then
-                line = mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                mainFrame.lines[index] = line
-                line:SetPoint("TOPLEFT", 0, -(index - 1) * 20)
-                line:SetPoint("RIGHT")
+        if info.level and info.level >= 90 then
+            local missing = GetMissingBosses(info)
+            if DB.showAll or #missing > 0 then
+                if #missing == 0 then
+                    index = index + 1
+                    local line = mainFrame.lines[index]
+                    if not line then
+                        line = mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                        mainFrame.lines[index] = line
+                        line:SetPoint("TOPLEFT", 0, -(index - 1) * 20)
+                        line:SetPoint("RIGHT")
+                    end
+                    line:SetText(ColorizeName(name, info.class) .. " - done")
+                    line:Show()
+                else
+                    for _, bossName in ipairs(missing) do
+                        index = index + 1
+                        local line = mainFrame.lines[index]
+                        if not line then
+                            line = mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                            mainFrame.lines[index] = line
+                            line:SetPoint("TOPLEFT", 0, -(index - 1) * 20)
+                            line:SetPoint("RIGHT")
+                        end
+                        line:SetText(ColorizeName(name, info.class) .. " - " .. bossName)
+                        line:Show()
+                    end
+                end
             end
-            local text = ColorizeName(name, info.class)
-            if info.killed then
-                text = text .. " - done"
-            end
-            line:SetText(text)
-            line:Show()
         end
     end
 
