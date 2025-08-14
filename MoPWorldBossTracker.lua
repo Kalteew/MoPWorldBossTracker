@@ -392,6 +392,8 @@ local function CreateOptionsPanel()
     local last = title
     for _, boss in ipairs(BOSSES) do
         local cb = CreateFrame("CheckButton", nil, tracking, "InterfaceOptionsCheckButtonTemplate")
+        cb.Text = cb.Text or cb:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        cb.Text:SetPoint("LEFT", cb, "RIGHT", 0, 1)
         cb.Text:SetText(GetBossName(boss))
         cb:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -4)
         cb:SetChecked(DB.trackBosses[boss.questId] ~= false)
@@ -420,6 +422,8 @@ local function CreateOptionsPanel()
     last = ltitle
     for i, level in ipairs(levels) do
         local rb = CreateFrame("CheckButton", nil, logging, "UIRadioButtonTemplate")
+        rb.Text = rb.Text or rb:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        rb.Text:SetPoint("LEFT", rb, "RIGHT", 0, 1)
         rb.Text:SetText(level.text)
         rb:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -8)
         rb:SetChecked(DB.logLevel == level.value)
