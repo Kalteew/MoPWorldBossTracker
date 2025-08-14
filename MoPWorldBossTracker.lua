@@ -285,6 +285,46 @@ local function ToggleMinimapButton()
     LogInfo("Minimap button %s", DB.minimap.hide and "hidden" or "shown")
 end
 
+local doUpdateTooltip
+
+local function AddCharactersToTooltip(tooltip)
+    local any
+    for name, info in pairs(DB.chars) do
+        if info.level and info.level >= 90 then
+            local missing = GetMissingBosses(info)
+            if DB.showAll or #missing > 0 then
+                if #missing == 0 then
+                    tooltip:AddLine(ColorizeName(name, info.class) .. " - done")
+                else
+                    for _, bossName in ipairs(missing) do
+                        tooltip:AddLine(ColorizeName(name, info.class) .. " - " .. bossName)
+                    end
+                end
+                any = true
+            end
+        end
+    end
+    if not any then
+        tooltip:AddLine("All set for this week!")
+    end
+end
+
+local function UpdateTooltip(tooltip, usingPanel)
+    local _, relativeTo = tooltip:GetPoint()
+    if doUpdateTooltip and (
+        usingPanel or (relativeTo and relativeTo:GetName() == "MoPWorldBossTrackerMinimapButton")
+    ) then
+        tooltip:ClearLines()
+        tooltip:AddLine("MoP World Boss Tracker")
+        tooltip:AddLine(" ")
+        AddCharactersToTooltip(tooltip)
+        tooltip:AddLine(" ")
+        tooltip:AddLine("|cFF9CD6DELeft-Click|r Toggle Frame")
+        tooltip:AddLine("|cFF9CD6DERight-Click|r Toggle Minimap")
+        C_Timer.After(1, function() UpdateTooltip(tooltip, usingPanel) end)
+    end
+end
+
 local function CreateMinimapButton()
     local button = CreateFrame("Button", "MoPWorldBossTrackerMinimapButton", Minimap)
     button:SetSize(32, 32)
@@ -297,7 +337,24 @@ local function CreateMinimapButton()
     icon:SetSize(20, 20)
     icon:SetPoint("CENTER")
 
-    button:SetScript("OnClick", ToggleFrame)
+    button:SetScript("OnClick", function(self, btn)
+        if btn == "RightButton" then
+            ToggleMinimapButton()
+        else
+            ToggleFrame()
+        end
+    end)
+    button:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_NONE")
+        GameTooltip:SetPoint("TOPLEFT", self, "BOTTOMLEFT")
+        doUpdateTooltip = true
+        UpdateTooltip(GameTooltip, true)
+        GameTooltip:Show()
+    end)
+    button:SetScript("OnLeave", function()
+        doUpdateTooltip = nil
+        GameTooltip:Hide()
+    end)
 
     UpdateMinimapButton()
 end
