@@ -64,6 +64,12 @@ local function EnsureDefaults()
     DB.lastResetAt = DB.lastResetAt or 0
     DB.showAll = DB.showAll or false
     DB.frameShown = DB.frameShown or false
+    DB.trackBosses = DB.trackBosses or {}
+    for _, boss in ipairs(BOSSES) do
+        if DB.trackBosses[boss.questId] == nil then
+            DB.trackBosses[boss.questId] = true
+        end
+    end
 end
 
 local function UpdateCharacter()
@@ -77,10 +83,12 @@ local function UpdateCharacter()
     char.lastSeen = time()
     char.killed = char.killed or {}
     for _, boss in ipairs(BOSSES) do
-        if IsQuestCompleted(boss.questId) then
-            char.killed[boss.questId] = true
-        else
-            char.killed[boss.questId] = nil
+        if DB.trackBosses[boss.questId] ~= false then
+            if IsQuestCompleted(boss.questId) then
+                char.killed[boss.questId] = true
+            else
+                char.killed[boss.questId] = nil
+            end
         end
     end
     DB.chars[key] = char
@@ -90,7 +98,7 @@ local function GetMissingBosses(info)
     local killed = type(info.killed) == "table" and info.killed or {}
     local missing = {}
     for _, boss in ipairs(BOSSES) do
-        if not killed[boss.questId] then
+        if DB.trackBosses[boss.questId] ~= false and not killed[boss.questId] then
             table.insert(missing, GetBossName(boss))
         end
     end
@@ -299,6 +307,37 @@ local function CreateMainFrame()
     end
 end
 
+local optionsPanel
+
+local function CreateOptionsPanel()
+    optionsPanel = CreateFrame("Frame")
+    optionsPanel.name = "MoP World Boss Tracker"
+
+    local title = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    title:SetPoint("TOPLEFT", 16, -16)
+    title:SetText("MoP World Boss Tracker")
+
+    local subtitle = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+    subtitle:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
+    subtitle:SetText("Select bosses to track:")
+
+    local last = subtitle
+    for _, boss in ipairs(BOSSES) do
+        local cb = CreateFrame("CheckButton", nil, optionsPanel, "InterfaceOptionsCheckButtonTemplate")
+        cb.Text:SetText(GetBossName(boss))
+        cb:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -4)
+        cb:SetChecked(DB.trackBosses[boss.questId] ~= false)
+        cb:SetScript("OnClick", function(self)
+            DB.trackBosses[boss.questId] = self:GetChecked() or false
+            UpdateCharacter()
+            RefreshUI()
+        end)
+        last = cb
+    end
+
+    InterfaceOptions_AddCategory(optionsPanel)
+end
+
 SLASH_MOPWB1 = "/mopwb"
 SlashCmdList["MOPWB"] = function(msg)
     msg = msg and msg:lower() or ""
@@ -328,6 +367,7 @@ eventFrame:SetScript("OnEvent", function(self, event)
         EnsureDefaults()
         CreateMainFrame()
         CreateMinimapButton()
+        CreateOptionsPanel()
         CheckReset()
         UpdateCharacter()
     elseif event == "PLAYER_ENTERING_WORLD" then
