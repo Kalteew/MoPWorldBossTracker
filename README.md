@@ -12,12 +12,14 @@
 - Shows each world boss a character still needs this week
 - Automatically handles weekly reset boundaries
 - Low memory usage
+- `/mopwb version` prints the addon version and currently active bosses
 
 ---
 
 ## Usage
 
 Toggle the tracker frame via the minimap button or `/mopwb toggle`. The frame shows your level 90+ characters that still need MoP world boss kills for the week. Use `/mopwb show` or `/mopwb hide` to control visibility, `/mopwb minimap` to toggle the minimap button, `/mopwb all` to display every character, and `/mopwb todo` to show only those still needing kills.
+Check the addon version and default active bosses with `/mopwb version`.
 
 ---
 
@@ -32,6 +34,8 @@ Toggle the tracker frame via the minimap button or `/mopwb toggle`. The frame sh
 - Yu'lon — Quest 33119 (NPC 71955)
 - Niuzao — Quest 33120 (NPC 71952)
 - Ordos — Quest 33121 (NPC 72057)
+
+Only Sha of Anger and Galleon are enabled by default; other bosses can be activated in the options panel.
 
 ---
 

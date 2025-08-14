@@ -1,5 +1,6 @@
 
 local ADDON_NAME = ...
+local ADDON_VERSION = GetAddOnMetadata(ADDON_NAME, "Version") or "dev"
 
 local BOSSES = {
     { questId = 32099, npcId = 60491, name = "Sha of Anger" },
@@ -13,6 +14,11 @@ local BOSSES = {
     { questId = 33121, npcId = 72057, name = "Ordos" },
 }
 
+local ACTIVE_QUEST_IDS = {
+    [32099] = true, -- Sha of Anger
+    [32098] = true, -- Galleon
+}
+
 local function GetBossName(boss)
     if not boss.name and C_QuestLog and C_QuestLog.GetTitleForQuestID then
         boss.name = C_QuestLog.GetTitleForQuestID(boss.questId)
@@ -21,6 +27,16 @@ local function GetBossName(boss)
         boss.name = "Unknown"
     end
     return boss.name
+end
+
+local function GetActiveBossNames()
+    local names = {}
+    for _, boss in ipairs(BOSSES) do
+        if ACTIVE_QUEST_IDS[boss.questId] then
+            table.insert(names, GetBossName(boss))
+        end
+    end
+    return names
 end
 
 local function IsQuestCompleted(id)
@@ -59,9 +75,17 @@ local function EnsureDefaults()
     DB.showAll = DB.showAll or false
     DB.frameShown = DB.frameShown or false
     DB.trackBosses = DB.trackBosses or {}
-    for _, boss in ipairs(BOSSES) do
-        if DB.trackBosses[boss.questId] == nil then
-            DB.trackBosses[boss.questId] = true
+
+    if DB.version ~= ADDON_VERSION then
+        for _, boss in ipairs(BOSSES) do
+            DB.trackBosses[boss.questId] = ACTIVE_QUEST_IDS[boss.questId] or false
+        end
+        DB.version = ADDON_VERSION
+    else
+        for _, boss in ipairs(BOSSES) do
+            if DB.trackBosses[boss.questId] == nil then
+                DB.trackBosses[boss.questId] = ACTIVE_QUEST_IDS[boss.questId] or false
+            end
         end
     end
 end
@@ -379,6 +403,9 @@ SlashCmdList["MOPWB"] = function(msg)
     elseif msg == "todo" then
         DB.showAll = false
         RefreshUI()
+    elseif msg == "version" then
+        local active = table.concat(GetActiveBossNames(), ", ")
+        print(string.format("%s v%s - active bosses: %s", ADDON_NAME, ADDON_VERSION, active))
     else
         ToggleFrame()
     end
