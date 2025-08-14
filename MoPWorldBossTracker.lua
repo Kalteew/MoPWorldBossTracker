@@ -335,7 +335,12 @@ local function CreateOptionsPanel()
         last = cb
     end
 
-    InterfaceOptions_AddCategory(optionsPanel)
+    if InterfaceOptions_AddCategory then
+        InterfaceOptions_AddCategory(optionsPanel)
+    elseif Settings and Settings.RegisterCanvasLayoutCategory then
+        local category = Settings.RegisterCanvasLayoutCategory(optionsPanel, optionsPanel.name)
+        Settings.RegisterAddOnCategory(category)
+    end
 end
 
 SLASH_MOPWB1 = "/mopwb"
