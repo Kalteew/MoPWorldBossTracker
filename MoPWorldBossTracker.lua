@@ -2,31 +2,23 @@
 local ADDON_NAME = ...
 
 local BOSSES = {
-    { questId = 32099, npcId = 60491 }, -- Sha of Anger
-    { questId = 32098, npcId = 62346 }, -- Galleon
-    { questId = 32518, npcId = 69099 }, -- Nalak
-    { questId = 32519, npcId = 69161 }, -- Oondasta
-    { questId = 33117, npcId = 71954 }, -- Xuen
-    { questId = 33118, npcId = 71953 }, -- Chi-Ji
-    { questId = 33119, npcId = 71955 }, -- Yu'lon
-    { questId = 33120, npcId = 71952 }, -- Niuzao
-    { questId = 33121, npcId = 72057 }, -- Ordos
+    { questId = 32099, npcId = 60491, name = "Sha of Anger" },
+    { questId = 32098, npcId = 62346, name = "Galleon" },
+    { questId = 32518, npcId = 69099, name = "Nalak" },
+    { questId = 32519, npcId = 69161, name = "Oondasta" },
+    { questId = 33117, npcId = 71954, name = "Xuen" },
+    { questId = 33118, npcId = 71953, name = "Chi-Ji" },
+    { questId = 33119, npcId = 71955, name = "Yu'lon" },
+    { questId = 33120, npcId = 71952, name = "Niuzao" },
+    { questId = 33121, npcId = 72057, name = "Ordos" },
 }
 
 local function GetBossName(boss)
+    if not boss.name and C_QuestLog and C_QuestLog.GetTitleForQuestID then
+        boss.name = C_QuestLog.GetTitleForQuestID(boss.questId)
+    end
     if not boss.name then
-        if EJ_GetCreatureInfoByID then
-            local name = EJ_GetCreatureInfoByID(boss.npcId)
-            if name then
-                boss.name = name
-            end
-        end
-        if not boss.name and C_QuestLog and C_QuestLog.GetTitleForQuestID then
-            boss.name = C_QuestLog.GetTitleForQuestID(boss.questId)
-        end
-        if not boss.name then
-            boss.name = "Unknown"
-        end
+        boss.name = "Unknown"
     end
     return boss.name
 end
