@@ -9,6 +9,7 @@
 - Minimap button and `/mopwb` slash commands to toggle the tracker frame
 - Draggable frame with persistent position
 - Option to display all characters or only those who still need world boss kills
+- Shows each world boss a character still needs this week
 - Automatically handles weekly reset boundaries
 - Low memory usage
 
@@ -26,7 +27,10 @@ Toggle the tracker frame via the minimap button or `/mopwb toggle`. The frame sh
 - Galleon — 32098
 - Nalak — 32518
 - Oondasta — 32519
-- Celestials — 33117–33120
+- Xuen — 33117
+- Chi-Ji — 33118
+- Yu'lon — 33119
+- Niuzao — 33120
 - Ordos — 33121
 
 ---
