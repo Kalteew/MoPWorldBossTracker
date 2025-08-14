@@ -13,9 +13,18 @@ local BOSS_QUEST_IDS = {
     33121, -- Ordos
 }
 
+local function IsQuestCompleted(id)
+    if C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted then
+        return C_QuestLog.IsQuestFlaggedCompleted(id)
+    elseif _G.IsQuestFlaggedCompleted then
+        return _G.IsQuestFlaggedCompleted(id)
+    end
+    return false
+end
+
 local function HasKilledAnyBoss()
     for _, id in ipairs(BOSS_QUEST_IDS) do
-        if IsQuestFlaggedCompleted(id) then
+        if IsQuestCompleted(id) then
             return true
         end
     end
