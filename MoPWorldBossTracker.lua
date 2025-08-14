@@ -63,6 +63,26 @@ end
 
 local DB
 
+local LOG_LEVEL = { ERROR = 1, INFO = 2, DEBUG = 3 }
+
+local function Log(level, msg, ...)
+    if DB and DB.logLevel and level <= DB.logLevel then
+        print("|cff33ff99" .. ADDON_NAME .. "|r:", string.format(msg, ...))
+    end
+end
+
+local function LogError(msg, ...)
+    Log(LOG_LEVEL.ERROR, msg, ...)
+end
+
+local function LogInfo(msg, ...)
+    Log(LOG_LEVEL.INFO, msg, ...)
+end
+
+local function LogDebug(msg, ...)
+    Log(LOG_LEVEL.DEBUG, msg, ...)
+end
+
 local function EnsureDefaults()
     DB = MoPWorldBossTrackerDB or {}
     MoPWorldBossTrackerDB = DB
@@ -75,6 +95,7 @@ local function EnsureDefaults()
     DB.showAll = DB.showAll or false
     DB.frameShown = DB.frameShown or false
     DB.trackBosses = DB.trackBosses or {}
+    DB.logLevel = DB.logLevel or LOG_LEVEL.INFO
 
     if DB.version ~= ADDON_VERSION then
         for _, boss in ipairs(BOSSES) do
@@ -110,6 +131,7 @@ local function UpdateCharacter()
         end
     end
     DB.chars[key] = char
+    LogDebug("Updated data for %s", key)
 end
 
 local function GetMissingBosses(info)
@@ -139,6 +161,7 @@ local function CheckReset()
         for _, char in pairs(DB.chars) do
             char.killed = {}
         end
+        LogInfo("Weekly reset detected, clearing kills")
         return true
     end
     return false
@@ -358,17 +381,17 @@ local function CreateOptionsPanel()
     optionsPanel = CreateFrame("Frame")
     optionsPanel.name = "MoP World Boss Tracker"
 
-    local title = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    local tracking = CreateFrame("Frame")
+    tracking.name = "Bosses"
+    tracking.parent = optionsPanel.name
+
+    local title = tracking:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 16, -16)
-    title:SetText("MoP World Boss Tracker")
+    title:SetText("Track Bosses")
 
-    local subtitle = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-    subtitle:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
-    subtitle:SetText("Select bosses to track:")
-
-    local last = subtitle
+    local last = title
     for _, boss in ipairs(BOSSES) do
-        local cb = CreateFrame("CheckButton", nil, optionsPanel, "InterfaceOptionsCheckButtonTemplate")
+        local cb = CreateFrame("CheckButton", nil, tracking, "InterfaceOptionsCheckButtonTemplate")
         cb.Text:SetText(GetBossName(boss))
         cb:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -4)
         cb:SetChecked(DB.trackBosses[boss.questId] ~= false)
@@ -380,17 +403,52 @@ local function CreateOptionsPanel()
         last = cb
     end
 
+    local logging = CreateFrame("Frame")
+    logging.name = "Logging"
+    logging.parent = optionsPanel.name
+
+    local ltitle = logging:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    ltitle:SetPoint("TOPLEFT", 16, -16)
+    ltitle:SetText("Logging Level")
+
+    local levels = {
+        { text = "Errors", value = LOG_LEVEL.ERROR },
+        { text = "Info", value = LOG_LEVEL.INFO },
+        { text = "Debug", value = LOG_LEVEL.DEBUG },
+    }
+    local radios = {}
+    last = ltitle
+    for i, level in ipairs(levels) do
+        local rb = CreateFrame("CheckButton", nil, logging, "UIRadioButtonTemplate")
+        rb.Text:SetText(level.text)
+        rb:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -8)
+        rb:SetChecked(DB.logLevel == level.value)
+        rb:SetScript("OnClick", function(self)
+            DB.logLevel = level.value
+            for _, b in ipairs(radios) do
+                b:SetChecked(b == self)
+            end
+        end)
+        table.insert(radios, rb)
+        last = rb
+    end
+
     if InterfaceOptions_AddCategory then
         InterfaceOptions_AddCategory(optionsPanel)
+        InterfaceOptions_AddCategory(tracking)
+        InterfaceOptions_AddCategory(logging)
     elseif Settings and Settings.RegisterCanvasLayoutCategory then
         local category = Settings.RegisterCanvasLayoutCategory(optionsPanel, optionsPanel.name)
         Settings.RegisterAddOnCategory(category)
+        Settings.RegisterCanvasLayoutSubcategory(category, tracking, tracking.name)
+        Settings.RegisterCanvasLayoutSubcategory(category, logging, logging.name)
     end
 end
 
 SLASH_MOPWB1 = "/mopwb"
 SlashCmdList["MOPWB"] = function(msg)
     msg = msg and msg:lower() or ""
+    LogDebug("Slash command: %s", msg)
     if msg == "show" then
         ShowFrame()
     elseif msg == "hide" then
@@ -423,6 +481,7 @@ eventFrame:SetScript("OnEvent", function(self, event)
         CreateOptionsPanel()
         CheckReset()
         UpdateCharacter()
+        LogInfo("%s v%s loaded", ADDON_NAME, ADDON_VERSION)
     elseif event == "PLAYER_ENTERING_WORLD" then
         CheckReset()
         UpdateCharacter()
