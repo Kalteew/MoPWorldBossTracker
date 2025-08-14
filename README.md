@@ -8,7 +8,7 @@
 
 - Minimap button and `/mopwb` slash commands to toggle the tracker frame
 - Draggable frame with persistent position
-- Lists only characters who have not killed any world boss this week
+- Option to display all characters or only those who still need world boss kills
 - Automatically handles weekly reset boundaries
 - Low memory usage
 
@@ -16,7 +16,7 @@
 
 ## Usage
 
-Toggle the tracker frame via the minimap button or `/mopwb toggle`. The frame shows your level 90+ characters that still need MoP world boss kills for the week. Use `/mopwb show` or `/mopwb hide` to control visibility and `/mopwb minimap` to toggle the minimap button.
+Toggle the tracker frame via the minimap button or `/mopwb toggle`. The frame shows your level 90+ characters that still need MoP world boss kills for the week. Use `/mopwb show` or `/mopwb hide` to control visibility, `/mopwb minimap` to toggle the minimap button, `/mopwb all` to display every character, and `/mopwb todo` to show only those still needing kills.
 
 ---
 
