@@ -274,7 +274,11 @@ local function CreateMainFrame()
     mainFrame:SetClampedToScreen(true)
     mainFrame:SetMovable(true)
     mainFrame:SetResizable(true)
-    mainFrame:SetMinResize(200, 150)
+    if mainFrame.SetResizeBounds then
+        mainFrame:SetResizeBounds(200, 150)
+    else
+        mainFrame:SetMinResize(200, 150)
+    end
     mainFrame:EnableMouse(true)
     mainFrame:RegisterForDrag("LeftButton")
     mainFrame:SetScript("OnDragStart", mainFrame.StartMoving)
