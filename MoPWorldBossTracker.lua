@@ -61,6 +61,8 @@ local function EnsureDefaults()
     DB.chars = DB.chars or {}
     DB.minimap = DB.minimap or { hide = false }
     DB.framePos = DB.framePos or {}
+    DB.framePos.width = DB.framePos.width or 300
+    DB.framePos.height = DB.framePos.height or 200
     DB.lastResetAt = DB.lastResetAt or 0
     DB.showAll = DB.showAll or false
     DB.frameShown = DB.frameShown or false
@@ -181,6 +183,14 @@ local function RefreshUI()
         end
     end
     mainFrame.content:SetHeight(index * 20)
+
+    local range = mainFrame.scrollFrame:GetVerticalScrollRange()
+    if range == 0 then
+        mainFrame.scrollFrame:SetVerticalScroll(0)
+        mainFrame.scrollFrame.ScrollBar:Hide()
+    else
+        mainFrame.scrollFrame.ScrollBar:Show()
+    end
 end
 
 local function ToggleFrame()
@@ -239,6 +249,7 @@ end
 
 local function LoadPosition()
     local pos = DB.framePos
+    mainFrame:SetSize(pos.width or 300, pos.height or 200)
     if pos.point then
         mainFrame:ClearAllPoints()
         mainFrame:SetPoint(pos.point, UIParent, pos.relativePoint, pos.x, pos.y)
@@ -253,6 +264,8 @@ local function SavePosition()
     DB.framePos.relativePoint = relativePoint
     DB.framePos.x = x
     DB.framePos.y = y
+    DB.framePos.width = mainFrame:GetWidth()
+    DB.framePos.height = mainFrame:GetHeight()
 end
 
 local function CreateMainFrame()
@@ -260,10 +273,12 @@ local function CreateMainFrame()
     mainFrame:SetSize(300, 200)
     mainFrame:SetClampedToScreen(true)
     mainFrame:SetMovable(true)
+    mainFrame:SetResizable(true)
+    mainFrame:SetMinResize(200, 150)
     mainFrame:EnableMouse(true)
     mainFrame:RegisterForDrag("LeftButton")
     mainFrame:SetScript("OnDragStart", mainFrame.StartMoving)
-    mainFrame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing(); SavePosition() end)
+    mainFrame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing(); SavePosition(); RefreshUI() end)
     mainFrame:SetScript("OnShow", RefreshUI)
     mainFrame:Hide()
 
@@ -293,7 +308,17 @@ local function CreateMainFrame()
         self:SetVerticalScroll(new)
     end)
     scrollFrame.ScrollBar:Hide()
+    mainFrame.scrollFrame = scrollFrame
     mainFrame.content = content
+
+    local resize = CreateFrame("Button", nil, mainFrame)
+    resize:SetPoint("BOTTOMRIGHT")
+    resize:SetSize(16, 16)
+    resize:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+    resize:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+    resize:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+    resize:SetScript("OnMouseDown", function(self) self:GetParent():StartSizing("BOTTOMRIGHT") end)
+    resize:SetScript("OnMouseUp", function(self) self:GetParent():StopMovingOrSizing(); SavePosition(); RefreshUI() end)
 
     mainFrame.lines = {}
     mainFrame.message = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
