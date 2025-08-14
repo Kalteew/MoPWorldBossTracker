@@ -164,13 +164,22 @@ local function CheckReset()
         LogInfo("Weekly reset detected, clearing kills")
         return true
     end
+    LogDebug("No reset needed; next reset at %s", DB.lastResetAt and date("%c", DB.lastResetAt) or "unknown")
     return false
 end
 
 local mainFrame
 
 local function RefreshUI()
-    if not mainFrame or not mainFrame:IsShown() then return end
+    if not mainFrame then
+        LogDebug("RefreshUI called before main frame exists")
+        return
+    end
+    if not mainFrame:IsShown() then
+        LogDebug("RefreshUI skipped; frame hidden")
+        return
+    end
+    LogDebug("Refreshing UI")
     UpdateCharacter()
 
     for _, line in ipairs(mainFrame.lines) do
@@ -230,22 +239,26 @@ local function RefreshUI()
     else
         mainFrame.scrollFrame.ScrollBar:Show()
     end
+    LogDebug("UI refresh complete (%d lines)", index)
 end
 
 local function ToggleFrame()
     if mainFrame:IsShown() then
         mainFrame:Hide()
         DB.frameShown = false
+        LogInfo("Main frame hidden")
     else
         mainFrame:Show()
         DB.frameShown = true
         RefreshUI()
+        LogInfo("Main frame shown")
     end
 end
 
 local function ShowFrame()
     if not mainFrame:IsShown() then
         mainFrame:Show()
+        LogInfo("Main frame shown")
     end
     DB.frameShown = true
     RefreshUI()
@@ -254,6 +267,7 @@ end
 local function HideFrame()
     mainFrame:Hide()
     DB.frameShown = false
+    LogInfo("Main frame hidden")
 end
 
 local function UpdateMinimapButton()
@@ -262,11 +276,13 @@ local function UpdateMinimapButton()
     else
         MoPWorldBossTrackerMinimapButton:Show()
     end
+    LogDebug("Minimap button %s", DB.minimap.hide and "hidden" or "shown")
 end
 
 local function ToggleMinimapButton()
     DB.minimap.hide = not DB.minimap.hide
     UpdateMinimapButton()
+    LogInfo("Minimap button %s", DB.minimap.hide and "hidden" or "shown")
 end
 
 local function CreateMinimapButton()
@@ -461,15 +477,19 @@ SlashCmdList["MOPWB"] = function(msg)
         ToggleMinimapButton()
     elseif msg == "all" then
         DB.showAll = true
+        LogInfo("Showing all characters")
         RefreshUI()
     elseif msg == "todo" then
         DB.showAll = false
+        LogInfo("Showing incomplete characters")
         RefreshUI()
     elseif msg == "version" then
         local active = table.concat(GetActiveBossNames(), ", ")
         print(string.format("%s v%s - active bosses: %s", ADDON_NAME, ADDON_VERSION, active))
-    else
+    elseif msg == "" then
         ToggleFrame()
+    else
+        LogError("Unknown command: %s", msg)
     end
 end
 
