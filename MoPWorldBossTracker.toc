@@ -1,0 +1,8 @@
+## Interface: 50001
+## Title: MoP World Boss Tracker
+## Author: ChatGPT
+## Version: 1.0.0
+## Notes: Track which characters have not killed any MoP world bosses this week
+## SavedVariables: MoPWorldBossTrackerDB
+
+MoPWorldBossTracker.lua
