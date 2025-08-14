@@ -178,6 +178,7 @@ local function CheckReset()
 end
 
 local mainFrame
+local HideFrame
 
 local function RefreshUI()
     if not mainFrame then
@@ -228,7 +229,8 @@ local function RefreshUI()
         mainFrame.message:Hide()
     else
         if index == 0 then
-            mainFrame.message:Show()
+            HideFrame()
+            return
         else
             mainFrame.message:Hide()
         end
@@ -267,7 +269,7 @@ local function ShowFrame()
     RefreshUI()
 end
 
-local function HideFrame()
+function HideFrame()
     mainFrame:Hide()
     DB.frameShown = false
     LogInfo("Main frame hidden")
@@ -323,7 +325,6 @@ local function UpdateTooltip(tooltip, usingPanel)
         AddCharactersToTooltip(tooltip)
         tooltip:AddLine(" ")
         tooltip:AddLine("|cFF9CD6DELeft-Click|r Toggle Frame")
-        tooltip:AddLine("|cFF9CD6DERight-Click|r Toggle Minimap")
         C_Timer.After(1, function() UpdateTooltip(tooltip, usingPanel) end)
     end
 end
@@ -336,16 +337,12 @@ local function CreateMinimapButton()
     button:SetPoint("TOPLEFT", Minimap, "TOPLEFT")
 
     local icon = button:CreateTexture(nil, "BACKGROUND")
-    icon:SetTexture("Interface\\Icons\\inv_misc_map_01")
+    icon:SetTexture("Interface\\Icons\\Achievement_Boss_ShaofAnger")
     icon:SetSize(20, 20)
     icon:SetPoint("CENTER")
 
-    button:SetScript("OnClick", function(self, btn)
-        if btn == "RightButton" then
-            ToggleMinimapButton()
-        else
-            ToggleFrame()
-        end
+    button:SetScript("OnClick", function()
+        ToggleFrame()
     end)
     button:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_NONE")
@@ -472,7 +469,7 @@ local function CreateOptionsPanel()
     local tab2 = CreateFrame("Button", "$parentTab2", optionsPanel, "PanelTopTabButtonTemplate")
     tab2:SetText("Bosses")
     tab2:SetID(2)
-    tab2:SetPoint("LEFT", tab1, "RIGHT", -15, 0)
+    tab2:SetPoint("LEFT", tab1, "RIGHT", 10, 0)
 
     PanelTemplates_SetNumTabs(optionsPanel, 2)
     local function ShowTab(id)
@@ -578,8 +575,40 @@ end
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:RegisterEvent("ZONE_CHANGED")
+eventFrame:RegisterEvent("ZONE_CHANGED_INDOORS")
+eventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 
-eventFrame:SetScript("OnEvent", function(self, event)
+local MAP_ID_PANDARIA = 424
+local questEventRegistered
+
+local function IsInPandaria()
+    if not C_Map or not C_Map.GetBestMapForUnit then return false end
+    local mapID = C_Map.GetBestMapForUnit("player")
+    while mapID do
+        local info = C_Map.GetMapInfo(mapID)
+        if not info then break end
+        if info.mapType == Enum.UIMapType.Continent then
+            return info.mapID == MAP_ID_PANDARIA
+        end
+        mapID = info.parentMapID
+    end
+    return false
+end
+
+local function UpdateQuestListener()
+    if IsInPandaria() then
+        if not questEventRegistered then
+            eventFrame:RegisterEvent("QUEST_TURNED_IN")
+            questEventRegistered = true
+        end
+    elseif questEventRegistered then
+        eventFrame:UnregisterEvent("QUEST_TURNED_IN")
+        questEventRegistered = false
+    end
+end
+
+eventFrame:SetScript("OnEvent", function(self, event, ...)
     if event == "PLAYER_LOGIN" then
         EnsureDefaults()
         CreateMainFrame()
@@ -587,13 +616,23 @@ eventFrame:SetScript("OnEvent", function(self, event)
         CreateOptionsPanel()
         CheckReset()
         UpdateCharacter()
+        UpdateQuestListener()
         LogInfo("%s v%s loaded", ADDON_NAME, ADDON_VERSION)
     elseif event == "PLAYER_ENTERING_WORLD" then
         CheckReset()
         UpdateCharacter()
+        UpdateQuestListener()
         if DB.frameShown then
             ShowFrame()
         else
+            RefreshUI()
+        end
+    elseif event == "ZONE_CHANGED" or event == "ZONE_CHANGED_INDOORS" or event == "ZONE_CHANGED_NEW_AREA" then
+        UpdateQuestListener()
+    elseif event == "QUEST_TURNED_IN" then
+        local questID = ...
+        if DB.trackBosses[questID] ~= false then
+            UpdateCharacter()
             RefreshUI()
         end
     end
