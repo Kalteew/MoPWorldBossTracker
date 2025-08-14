@@ -54,6 +54,7 @@ local function EnsureDefaults()
     DB.minimap = DB.minimap or { hide = false }
     DB.framePos = DB.framePos or {}
     DB.lastResetAt = DB.lastResetAt or 0
+    DB.showAll = DB.showAll or false
 end
 
 local function UpdateCharacter()
@@ -103,7 +104,7 @@ local function RefreshUI()
 
     local index = 0
     for name, info in pairs(DB.chars) do
-        if info.level and info.level >= 90 and not info.killed then
+        if info.level and info.level >= 90 and (DB.showAll or not info.killed) then
             index = index + 1
             local line = mainFrame.lines[index]
             if not line then
@@ -112,15 +113,23 @@ local function RefreshUI()
                 line:SetPoint("TOPLEFT", 0, -(index - 1) * 20)
                 line:SetPoint("RIGHT")
             end
-            line:SetText(ColorizeName(name, info.class))
+            local text = ColorizeName(name, info.class)
+            if info.killed then
+                text = text .. " - done"
+            end
+            line:SetText(text)
             line:Show()
         end
     end
 
-    if index == 0 then
-        mainFrame.message:Show()
-    else
+    if DB.showAll then
         mainFrame.message:Hide()
+    else
+        if index == 0 then
+            mainFrame.message:Show()
+        else
+            mainFrame.message:Hide()
+        end
     end
     mainFrame.content:SetHeight(index * 20)
 end
@@ -250,6 +259,12 @@ SlashCmdList["MOPWB"] = function(msg)
         HideFrame()
     elseif msg == "minimap" then
         ToggleMinimapButton()
+    elseif msg == "all" then
+        DB.showAll = true
+        RefreshUI()
+    elseif msg == "todo" then
+        DB.showAll = false
+        RefreshUI()
     else
         ToggleFrame()
     end
