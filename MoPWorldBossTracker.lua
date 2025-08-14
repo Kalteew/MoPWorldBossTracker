@@ -45,6 +45,7 @@ local function EnsureDefaults()
     DB.framePos = DB.framePos or {}
     DB.lastResetAt = DB.lastResetAt or 0
     DB.showAll = DB.showAll or false
+    DB.frameShown = DB.frameShown or false
 end
 
 local function UpdateCharacter()
@@ -159,8 +160,10 @@ end
 local function ToggleFrame()
     if mainFrame:IsShown() then
         mainFrame:Hide()
+        DB.frameShown = false
     else
         mainFrame:Show()
+        DB.frameShown = true
         RefreshUI()
     end
 end
@@ -169,11 +172,13 @@ local function ShowFrame()
     if not mainFrame:IsShown() then
         mainFrame:Show()
     end
+    DB.frameShown = true
     RefreshUI()
 end
 
 local function HideFrame()
     mainFrame:Hide()
+    DB.frameShown = false
 end
 
 local function UpdateMinimapButton()
@@ -236,15 +241,6 @@ local function CreateMainFrame()
     mainFrame:SetScript("OnShow", RefreshUI)
     mainFrame:Hide()
 
-    mainFrame:SetBackdrop({
-        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        tile = true,
-        tileSize = 32,
-        edgeSize = 32,
-        insets = { left = 11, right = 12, top = 12, bottom = 11 },
-    })
-
     local title = mainFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     title:SetPoint("TOP", 0, -10)
     title:SetText("MoP World Boss Tracker")
@@ -256,11 +252,21 @@ local function CreateMainFrame()
 
     local scrollFrame = CreateFrame("ScrollFrame", nil, mainFrame, "UIPanelScrollFrameTemplate")
     scrollFrame:SetPoint("TOPLEFT", 16, -32)
-    scrollFrame:SetPoint("BOTTOMRIGHT", -32, 16)
+    scrollFrame:SetPoint("BOTTOMRIGHT", -16, 16)
 
     local content = CreateFrame("Frame", nil, scrollFrame)
     content:SetSize(1, 1)
     scrollFrame:SetScrollChild(content)
+    scrollFrame:EnableMouseWheel(true)
+    scrollFrame:SetScript("OnMouseWheel", function(self, delta)
+        local current = self:GetVerticalScroll()
+        local new = current - delta * 20
+        if new < 0 then new = 0 end
+        local range = self:GetVerticalScrollRange()
+        if new > range then new = range end
+        self:SetVerticalScroll(new)
+    end)
+    scrollFrame.ScrollBar:Hide()
     mainFrame.content = content
 
     mainFrame.lines = {}
@@ -270,6 +276,9 @@ local function CreateMainFrame()
     mainFrame.message:Hide()
 
     LoadPosition()
+    if DB.frameShown then
+        mainFrame:Show()
+    end
 end
 
 SLASH_MOPWB1 = "/mopwb"
@@ -306,7 +315,11 @@ eventFrame:SetScript("OnEvent", function(self, event)
     elseif event == "PLAYER_ENTERING_WORLD" then
         CheckReset()
         UpdateCharacter()
-        RefreshUI()
+        if DB.frameShown then
+            ShowFrame()
+        else
+            RefreshUI()
+        end
     end
 end)
 
