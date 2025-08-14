@@ -61,6 +61,15 @@ local function ColorizeName(name, class)
     return name
 end
 
+function AddTextToFrame(theFrame, text, firstPosition, x, y)
+    local font = theFrame:CreateFontString(nil, "OVERLAY")
+    font:SetFontObject("GameFontHighlight")
+    font:SetPoint(firstPosition, x, y)
+    font:SetText(text)
+    font:SetFont("Fonts\\FRIZQT__.ttf", pcdSettings.entrySize, "OUTLINE")
+    return font
+end
+
 local DB
 
 local LOG_LEVEL = { ERROR = 1, INFO = 2, DEBUG = 3 }
@@ -196,9 +205,8 @@ local function RefreshUI()
                     index = index + 1
                     local line = mainFrame.lines[index]
                     if not line then
-                        line = mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                        line = AddTextToFrame(mainFrame.content, "", "TOPLEFT", 0, -(index - 1) * 20)
                         mainFrame.lines[index] = line
-                        line:SetPoint("TOPLEFT", 0, -(index - 1) * 20)
                         line:SetPoint("RIGHT")
                     end
                     line:SetText(ColorizeName(name, info.class) .. " - done")
@@ -208,9 +216,8 @@ local function RefreshUI()
                         index = index + 1
                         local line = mainFrame.lines[index]
                         if not line then
-                            line = mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                            line = AddTextToFrame(mainFrame.content, "", "TOPLEFT", 0, -(index - 1) * 20)
                             mainFrame.lines[index] = line
-                            line:SetPoint("TOPLEFT", 0, -(index - 1) * 20)
                             line:SetPoint("RIGHT")
                         end
                         line:SetText(ColorizeName(name, info.class) .. " - " .. bossName)
