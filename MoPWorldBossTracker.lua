@@ -337,7 +337,7 @@ local function CreateMinimapButton()
     button:SetPoint("TOPLEFT", Minimap, "TOPLEFT")
 
     local icon = button:CreateTexture(nil, "BACKGROUND")
-    icon:SetTexture("Interface\\Icons\\Achievement_Boss_ShaofAnger")
+    icon:SetTexture("Interface\\AddOns\\MoPWorldBossTracker\\MopWorldBossTracker_icon.tga")
     icon:SetSize(20, 20)
     icon:SetPoint("CENTER")
 
