@@ -3,7 +3,7 @@
 ## Author: ChatGPT
 ## Version: 1.1.0
 ## Notes: Track which characters have not killed any MoP world bosses this week
-## IconTexture: Interface\Icons\Achievement_Boss_ShaofAnger
+## IconTexture: MopWorldBossTracker_icon.tga
 ## SavedVariables: MoPWorldBossTrackerDB
 
 MoPWorldBossTracker.lua
