@@ -106,6 +106,12 @@ local function EnsureDefaults()
     DB.trackBosses = DB.trackBosses or {}
     DB.logLevel = DB.logLevel or LOG_LEVEL.INFO
 
+    for _, char in pairs(DB.chars) do
+        if char.active == nil then
+            char.active = true
+        end
+    end
+
     if DB.version ~= ADDON_VERSION then
         for _, boss in ipairs(BOSSES) do
             DB.trackBosses[boss.questId] = ACTIVE_QUEST_IDS[boss.questId] or false
@@ -126,6 +132,9 @@ local function UpdateCharacter()
     local key = GetCharKey()
     local _, classFile = UnitClass("player")
     local char = DB.chars[key] or {}
+    if char.active == nil then
+        char.active = true
+    end
     char.level = level
     char.class = classFile
     char.lastSeen = time()
@@ -199,7 +208,7 @@ local function RefreshUI()
 
     local index = 0
     for name, info in pairs(DB.chars) do
-        if info.level and info.level >= 90 then
+        if info.level and info.level >= 90 and info.active ~= false then
             local missing = GetMissingBosses(info)
             if DB.showAll or #missing > 0 then
                 if #missing == 0 then
@@ -295,7 +304,7 @@ local doUpdateTooltip
 local function AddCharactersToTooltip(tooltip)
     local any
     for name, info in pairs(DB.chars) do
-        if info.level and info.level >= 90 then
+        if info.level and info.level >= 90 and info.active ~= false then
             local missing = GetMissingBosses(info)
             if DB.showAll or #missing > 0 then
                 if #missing == 0 then
@@ -468,6 +477,10 @@ local function CreateOptionsPanel()
     bosses:SetAllPoints()
     bosses:Hide()
 
+    local characters = CreateFrame("Frame", nil, optionsPanel)
+    characters:SetAllPoints()
+    characters:Hide()
+
     local tab1 = CreateFrame("Button", "$parentTab1", optionsPanel, "PanelTopTabButtonTemplate")
     tab1:SetText("General")
     tab1:SetID(1)
@@ -478,14 +491,21 @@ local function CreateOptionsPanel()
     tab2:SetID(2)
     tab2:SetPoint("LEFT", tab1, "RIGHT", 10, 0)
 
-    PanelTemplates_SetNumTabs(optionsPanel, 2)
+    local tab3 = CreateFrame("Button", "$parentTab3", optionsPanel, "PanelTopTabButtonTemplate")
+    tab3:SetText("Characters")
+    tab3:SetID(3)
+    tab3:SetPoint("LEFT", tab2, "RIGHT", 10, 0)
+
+    PanelTemplates_SetNumTabs(optionsPanel, 3)
     local function ShowTab(id)
         PanelTemplates_SetTab(optionsPanel, id)
         general:SetShown(id == 1)
         bosses:SetShown(id == 2)
+        characters:SetShown(id == 3)
     end
     tab1:SetScript("OnClick", function(self) ShowTab(self:GetID()) end)
     tab2:SetScript("OnClick", function(self) ShowTab(self:GetID()) end)
+    tab3:SetScript("OnClick", function(self) ShowTab(self:GetID()) end)
     ShowTab(1)
 
     local ltitle = general:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
@@ -538,6 +558,33 @@ local function CreateOptionsPanel()
         cb:SetScript("OnClick", function(self)
             DB.trackBosses[boss.questId] = self:GetChecked() or false
             UpdateCharacter()
+            RefreshUI()
+        end)
+        last = cb
+    end
+
+    local clabel = characters:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    clabel:SetPoint("TOPLEFT", 16, -16)
+    clabel:SetText("Active Characters")
+
+    last = clabel
+    local names = {}
+    for name, info in pairs(DB.chars) do
+        if info.level and info.level >= 90 then
+            table.insert(names, name)
+        end
+    end
+    table.sort(names)
+    for _, name in ipairs(names) do
+        local info = DB.chars[name]
+        local cb = CreateFrame("CheckButton", nil, characters, "InterfaceOptionsCheckButtonTemplate")
+        cb.Text = cb.Text or cb:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        cb.Text:SetPoint("LEFT", cb, "RIGHT", 0, 1)
+        cb.Text:SetText(ColorizeName(name, info.class))
+        cb:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -4)
+        cb:SetChecked(info.active ~= false)
+        cb:SetScript("OnClick", function(self)
+            info.active = self:GetChecked() and true or false
             RefreshUI()
         end)
         last = cb
